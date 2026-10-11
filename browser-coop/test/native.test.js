@@ -3,10 +3,22 @@ import fs from 'node:fs';
 import test from 'node:test';
 import { engineOptions, finishEngine } from '../extension/src/native-engine.js';
 import { normalizeRelay, sessionUrl } from '../extension/src/navigation.js';
+import { compatibleEngines } from '../extension/src/layout.js';
 
 const state = (props = {}) => ({ controller: true, mode: null, note() {}, ...props });
 const smallWasm = Uint8Array.from([0, 97, 115, 109, 1, 0, 0, 0]);
 const response = bytes => async () => new Response(bytes);
+
+test('desktop and iOS 0.2 builds can share a room, unknown builds cannot', () => {
+  const desktop = '61192df377020627f52fa7e9fd28047bd53662aa46e5e3cd6e7fad0c5c35cc98';
+  const ios = '36024c2655e29a3eb97b64c20e3b9270cd610943c70c18ed470bcd8789a6ff01';
+  assert.equal(compatibleEngines(desktop, ios), true);
+  assert.equal(compatibleEngines(ios, desktop), true);
+  assert.equal(compatibleEngines(desktop, desktop), true);
+  assert.equal(compatibleEngines(desktop, 'unknown'), false);
+  assert.equal(compatibleEngines('unknown', 'unknown'), false);
+  assert.equal(compatibleEngines('toString', 'toString'), false);
+});
 
 test('solo with controller disabled uses the untouched loader without fetching twice', async () => {
   const options = await engineOptions(state({ controller: false }), 'unused', () => { throw Error('unexpected fetch'); });

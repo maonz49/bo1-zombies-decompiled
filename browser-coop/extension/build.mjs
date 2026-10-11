@@ -3,7 +3,7 @@
 import { build } from "esbuild";
 
 const dir = new URL(".", import.meta.url).pathname;
-const version = 'znoam-20261011-1';
+const version = 'znoam-20261011-2';
 
 const pump = await build({
   entryPoints: [`${dir}src/pump-worker.js`],

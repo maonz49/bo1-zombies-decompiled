@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { GamepadControl } from "../extension/src/gamepad.js";
+import { GamepadControl, normalizeAimLevel } from "../extension/src/gamepad.js";
 
 // A fake standard-mapping pad and engine; update() is driven by hand with frame times.
 function rig({ menu = false } = {}) {
@@ -69,6 +69,32 @@ test("the right stick aims through mouse motion; nothing inside the deadzone", (
   pad.axes = [0, 0, 1, 0]; frame(); frame();
   const motion = inputs.filter((i) => i[0] === 2);
   assert.ok(motion.length > 0 && motion.every(([, dx, dy]) => dx > 0 && dy === 0));
+});
+
+test('default aim is 50% faster, ADS stays slower, and a live level change affects the next frame', () => {
+  const r = rig();
+  r.frame();
+  r.pad.axes[2] = 1;
+  r.frame();
+  assert.deepEqual(r.inputs.at(-1), [2, 30, 0]); // Previously 20 px for this 16 ms frame.
+  r.press(6); r.frame();
+  assert.deepEqual(r.inputs.at(-1), [2, 15, 0]);
+  r.press(6, false);
+  r.control.aimLevel = 9; r.frame();
+  assert.deepEqual(r.inputs.at(-1), [2, 72, 0]);
+  r.control.aimLevel = 0; r.frame();
+  assert.deepEqual(r.inputs.at(-1), [2, 9, 0]);
+});
+
+test('invalid and fractional saved levels cannot produce an undefined aiming speed', () => {
+  assert.equal(normalizeAimLevel('invalid'), 4);
+  assert.equal(normalizeAimLevel(''), 4);
+  assert.equal(normalizeAimLevel(null), 4);
+  assert.equal(normalizeAimLevel(Infinity), 4);
+  assert.equal(normalizeAimLevel('-2'), 0);
+  assert.equal(normalizeAimLevel('100'), 9);
+  assert.equal(normalizeAimLevel('3.7'), 4);
+  assert.equal(normalizeAimLevel('0'), 0);
 });
 
 test("in a menu the stick moves the cursor and cross clicks; held actions are released", () => {

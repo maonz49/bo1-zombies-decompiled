@@ -27,16 +27,23 @@ const MOVE = { forward: 301, back: 302, moveleft: 303, moveright: 304 };
 
 const STICK_DEADZONE = 0.16, AIM_DEADZONE = 0.12, TRIGGER = 0.35, PRONE_HOLD_MS = 350;
 
-export const AIM_SPEEDS = [400, 600, 800, 1000, 1250, 1500, 1800, 2100, 2500, 3000]; // px/s at full tilt
+// 50% faster at every level, while retaining the player's saved 1–10 preference.
+export const AIM_SPEEDS = [600, 900, 1200, 1500, 1875, 2250, 2700, 3150, 3750, 4500]; // px/s at full tilt
+export const DEFAULT_AIM_LEVEL = 4;
+
+export function normalizeAimLevel(value) {
+  const number = value === null || value === '' ? NaN : Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(AIM_SPEEDS.length - 1, Math.round(number))) : DEFAULT_AIM_LEVEL;
+}
 
 export class GamepadControl {
   /**
    * engine(): { Module, command(text) } or null while the game is not ready; canvasSize(): { width, height }.
    */
-  constructor({ engine, canvasSize, aimLevel = 4 }) {
+  constructor({ engine, canvasSize, aimLevel = DEFAULT_AIM_LEVEL }) {
     this.engine = engine;
     this.canvasSize = canvasSize;
-    this.aimLevel = aimLevel;
+    this.aimLevel = normalizeAimLevel(aimLevel);
     this.pad = null;
     this.prev = [];
     this.held = new Set(); // actions currently "+"

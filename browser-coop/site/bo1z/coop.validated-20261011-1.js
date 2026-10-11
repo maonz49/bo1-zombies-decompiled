@@ -1,4 +1,4 @@
-// BO1 Znoam znoam-20261011-1. Adapted from invictus841/bo1-zombies-decompiled @ 861e39bc.
+// BO1 Znoam znoam-20261011-2. Adapted from invictus841/bo1-zombies-decompiled @ 861e39bc.
 
 // extension/src/layout.js
 var BUILDS = {
@@ -58,6 +58,10 @@ var BUILDS = {
     // NA_LOOPBACK
   }
 };
+BUILDS["36024c2655e29a3eb97b64c20e3b9270cd610943c70c18ed470bcd8789a6ff01"] = BUILDS["61192df377020627f52fa7e9fd28047bd53662aa46e5e3cd6e7fad0c5c35cc98"];
+function compatibleEngines(left, right) {
+  return Object.hasOwn(BUILDS, left) && Object.hasOwn(BUILDS, right) && BUILDS[left] === BUILDS[right];
+}
 var CONNECTION = Object.freeze({ disconnected: 0, connecting: 4, challenging: 5, connected: 6, sendingStats: 7, loading: 8, primed: 9, active: 10 });
 var CLIENT_STATE = Object.freeze({ free: 0, zombie: 1, reconnecting: 2, connected: 3, loading: 4, active: 5 });
 
@@ -809,15 +813,20 @@ var STICK_DEADZONE = 0.16;
 var AIM_DEADZONE = 0.12;
 var TRIGGER = 0.35;
 var PRONE_HOLD_MS = 350;
-var AIM_SPEEDS = [400, 600, 800, 1e3, 1250, 1500, 1800, 2100, 2500, 3e3];
+var AIM_SPEEDS = [600, 900, 1200, 1500, 1875, 2250, 2700, 3150, 3750, 4500];
+var DEFAULT_AIM_LEVEL = 4;
+function normalizeAimLevel(value) {
+  const number = value === null || value === "" ? NaN : Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(AIM_SPEEDS.length - 1, Math.round(number))) : DEFAULT_AIM_LEVEL;
+}
 var GamepadControl = class {
   /**
    * engine(): { Module, command(text) } or null while the game is not ready; canvasSize(): { width, height }.
    */
-  constructor({ engine, canvasSize, aimLevel = 4 }) {
+  constructor({ engine, canvasSize, aimLevel = DEFAULT_AIM_LEVEL }) {
     this.engine = engine;
     this.canvasSize = canvasSize;
-    this.aimLevel = aimLevel;
+    this.aimLevel = normalizeAimLevel(aimLevel);
     this.pad = null;
     this.prev = [];
     this.held = /* @__PURE__ */ new Set();
@@ -1008,8 +1017,55 @@ function clamp(value, low, high) {
   return Math.max(low, Math.min(high, value));
 }
 
+// extension/src/controller-settings.js
+function mountControllerSettings({ level, onChange }) {
+  const body = document.querySelector("#settings .settings-body");
+  if (!body || document.getElementById("controller-sensitivity")) return null;
+  const row = document.createElement("div");
+  row.className = "controller-setting";
+  const label = document.createElement("label");
+  label.htmlFor = "controller-sensitivity";
+  label.append("Sensibilit\xE9 de la manette ");
+  const output = document.createElement("output");
+  output.id = "controller-sensitivity-value";
+  output.setAttribute("for", "controller-sensitivity");
+  output.style.marginInlineStart = "8px";
+  output.style.flexShrink = "0";
+  label.append(output);
+  const input = document.createElement("input");
+  input.id = "controller-sensitivity";
+  input.type = "range";
+  input.min = "1";
+  input.max = String(AIM_SPEEDS.length);
+  input.step = "1";
+  input.style.minHeight = "44px";
+  input.style.touchAction = "pan-y";
+  input.setAttribute("aria-describedby", "controller-sensitivity-hint");
+  const hint = document.createElement("p");
+  hint.id = "controller-sensitivity-hint";
+  hint.textContent = "Stick droit : de lent (1) \xE0 rapide (10).";
+  hint.style.cssText = "margin: -6px 0 16px; font-size: .75rem; text-transform: none; letter-spacing: normal;";
+  row.append(label, input, hint);
+  body.insertBefore(row, body.querySelector('label[for="volume"]'));
+  body.style.maxHeight = "calc(100dvh - 100px - env(safe-area-inset-bottom))";
+  body.style.overflowY = "auto";
+  const sync = (value) => {
+    const display = normalizeAimLevel(value) + 1;
+    input.value = String(display);
+    output.value = `${display}/${AIM_SPEEDS.length}`;
+    input.setAttribute("aria-valuetext", `${display} sur ${AIM_SPEEDS.length}`);
+  };
+  input.addEventListener("input", () => {
+    const value = normalizeAimLevel(Number(input.value) - 1);
+    sync(value);
+    onChange(value);
+  });
+  sync(level);
+  return { sync };
+}
+
 // extension/src/main.js
-var VERSION = "znoam-20261011-1";
+var VERSION = "znoam-20261011-2";
 var DEFAULT_RELAY = normalizeRelay(configuredRelay);
 var BASE = "/bo1z/";
 var MAP_SLUGS = {
@@ -1056,10 +1112,10 @@ function start() {
     inviteRelay: normalizeRelay(params.get("relay") ?? ""),
     editRelay: false,
     uncapped: params.get("coopUncapped") !== "0" && !matchMedia("(pointer: coarse)").matches,
-    // Controller support needs the patched engine (its command mailbox), so with it on the engine is patched in
-    // solo games too. Off: solo games run exactly as on vel.gg.
-    controller: readSetting("bo1z-coop-controller", "1") !== "0",
-    aimLevel: Math.max(0, Math.min(AIM_SPEEDS.length - 1, Number(readSetting("bo1z-coop-aim", "4")) || 0)),
+    // Touch-only solo must keep its existing loader while iPhone startup is unresolved.
+    // An explicit controller choice is retained; desktop still enables it by default.
+    controller: readSetting("bo1z-coop-controller", matchMedia("(pointer: coarse)").matches ? "0" : "1") !== "0",
+    aimLevel: normalizeAimLevel(readSetting("bo1z-coop-aim", String(DEFAULT_AIM_LEVEL))),
     socket: "idle",
     peer: false,
     peerInfo: null,
@@ -1156,6 +1212,7 @@ function start() {
   });
   coop.panel = panel;
   panel.mount();
+  coop.controllerSettings = mountControllerSettings({ level: coop.aimLevel, onChange: (level) => setAim(coop, level) });
   if (coop.controller) {
     coop.gamepad = new GamepadControl({
       // Only while our player is in a game: the engine runs the commands and the menus own the cursor.
@@ -1343,7 +1400,7 @@ function setupHost(coop, Module, args) {
 async function setupGuest(coop, Module, args) {
   const info = await until(() => coop.peerInfo?.zone ? coop.peerInfo : null, 3e4);
   if (!info) throw new Error("L\u2019h\xF4te ne r\xE9pond pas. V\xE9rifiez que sa partie est ouverte, puis rechargez.");
-  if (info.hash && info.hash !== coop.hash) throw new Error("Les deux joueurs ont des versions diff\xE9rentes du jeu. Rechargez les deux pages.");
+  if (info.hash && !compatibleEngines(info.hash, coop.hash)) throw new Error("Les deux joueurs ont des versions incompatibles du jeu. Rechargez les deux pages.");
   const zone = devmapZone(args);
   if (zone !== info.zone) throw new Error(`L\u2019h\xF4te joue sur ${MAP_NAMES[info.slug] ?? info.zone}. Rechargez cette page.`);
   if (Array.isArray(info.gameArgs)) applyGameDvars(args, info.gameArgs);
@@ -1698,8 +1755,9 @@ function relayBlocks(coop) {
   return blocks;
 }
 function setAim(coop, level) {
-  coop.aimLevel = Math.max(0, Math.min(AIM_SPEEDS.length - 1, level));
+  coop.aimLevel = normalizeAimLevel(level);
   if (coop.gamepad) coop.gamepad.aimLevel = coop.aimLevel;
+  coop.controllerSettings?.sync(coop.aimLevel);
   saveSetting("bo1z-coop-aim", String(coop.aimLevel));
 }
 function readSetting(key, fallback) {
