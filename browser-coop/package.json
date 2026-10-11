@@ -1,0 +1,23 @@
+{
+  "name": "bo1-zombies-browser-coop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Manettes et coop\u00e9ration \u00e0 deux int\u00e9gr\u00e9es au site BO1 Znoam",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node extension/build.mjs",
+    "check": "node --check shared/protocol.js && node --check relay/src/index.js && npm run build && node --check site/bo1z/coop.validated-20261011-1.js",
+    "test": "node --experimental-vm-modules --test test/*.test.js test/mobile/*.test.mjs",
+    "dev:relay": "wrangler dev --config relay/wrangler.jsonc",
+    "deploy:relay": "wrangler deploy --config relay/wrangler.jsonc",
+    "test:browser": "node scripts/browser-smoke.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "puppeteer-core": "^24.43.1",
+    "wrangler": "^4.0.0"
+  }
+}

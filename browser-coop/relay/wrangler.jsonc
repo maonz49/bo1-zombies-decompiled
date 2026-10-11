@@ -1,0 +1,33 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "bo1-znoam-coop",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-08",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ROOM_RELAY",
+        "class_name": "RoomRelay"
+      },
+      {
+        "name": "USAGE",
+        "class_name": "UsageCounter"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RoomRelay"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["UsageCounter"]
+    }
+  ],
+  "observability": { "enabled": true },
+  "vars": {
+    // Pages allowed to open rooms. Requests without an Origin header (tools, tests) are also accepted.
+    "ALLOWED_ORIGINS": "https://bo1.znoam.eu,http://localhost:8788,http://127.0.0.1:8788"
+  }
+}

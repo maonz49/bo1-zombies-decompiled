@@ -1,0 +1,105 @@
+{
+  "version": "znoam-20261011-1",
+  "date": "2026-10-11",
+  "upstream": "https://github.com/invictus841/bo1-zombies-decompiled/tree/861e39bc083b4b986f68ad700c2e93f588736641/browser-coop",
+  "engine_sha256": "61192df377020627f52fa7e9fd28047bd53662aa46e5e3cd6e7fad0c5c35cc98",
+  "tests": {
+    "node": {
+      "pass": 68,
+      "fail": 0,
+      "skipped": 0
+    },
+    "chromium": [
+      "Panneau ordinateur, invitation invalide, focus conservé",
+      "Panneau mobile 375px et paysage",
+      "Vrai WASM modifié : compilation, instanciation asynchrone, runtime Emscripten et 1 pthread initialisés",
+      "Deux workers navigateur : salon partagé, informations hôte et déconnexion"
+    ]
+  },
+  "not_validated": [
+    "Partie complète après adaptation",
+    "Appareil iPhone réel"
+  ],
+  "deployment": {
+    "website": false,
+    "relay": false
+  },
+  "site_files": {
+    "bo1z/artifacts/KisakBlack-web.mobile-start-20261011-1.mjs": {
+      "bytes": 275921,
+      "sha256": "eeec2c212af6d3253abcef923bb6baeb75f546e47635be52398d865600d42ed2"
+    },
+    "bo1z/canvas.mobile-start-20261011-1.js": {
+      "bytes": 1141,
+      "sha256": "a05c136380784738f0eeeb9034ae695390a4dd94471bce5ae963150f90c94834"
+    },
+    "bo1z/coop-config.js": {
+      "bytes": 245,
+      "sha256": "58b32347ba0240eef9afa7401564d49bb1e453c996f05b8b61525fbe9cfbb552"
+    },
+    "bo1z/coop.validated-20261011-1.js": {
+      "bytes": 86557,
+      "sha256": "a671b7dcc76f9a4c2ac29865b266a486f64f9ac290415eac0be22f1c352bb755"
+    },
+    "bo1z/download-worker.mobile-start-20261011-1.js": {
+      "bytes": 32130,
+      "sha256": "b66966f3d8c4ae70f4f14710c44e3154c58313db7ea97c00a19aa78d01b238af"
+    },
+    "bo1z/engine-download-worker.mobile-start-20261011-1.js": {
+      "bytes": 486,
+      "sha256": "bef8710f1c0fb15b2fa469c2da8d6682bbdbac46ffed7c20a2d52c504a750b12"
+    },
+    "bo1z/engine.coop-20261011-1.js": {
+      "bytes": 42848,
+      "sha256": "c0a01f173f2a5a34974ebbff84bc0f196fbdf41900ffe269f4f0aef1f5373ddc"
+    },
+    "bo1z/engine.mobile-start-20261011-1.js": {
+      "bytes": 42585,
+      "sha256": "ecc8f4a28d9c83a84a7718a029497adee2f2a3d4155431719a17cdd492ca61a6"
+    },
+    "bo1z/kino-mobile-20261011.html": {
+      "bytes": 3729,
+      "sha256": "bf915992e1abb93034a87788f8b948d29959a77838cc4d071106fcec21870cc9"
+    },
+    "bo1z/kino.page.html": {
+      "bytes": 3729,
+      "sha256": "bf915992e1abb93034a87788f8b948d29959a77838cc4d071106fcec21870cc9"
+    },
+    "bo1z/mobile-intro.no-intro-20261011-1.mjs": {
+      "bytes": 2625,
+      "sha256": "fb19a7fd3d623fd7de1384eae72f32e33f6672bb82daa1b1f701b0037a223876"
+    },
+    "bo1z/mobile-profile.mobile-start-20261011-1.js": {
+      "bytes": 1138,
+      "sha256": "dba4ee929df62c8fd990fe343f38dcb9197a691dd34321caf037e00c00e7632b"
+    },
+    "bo1z/play.begin-scene-20261011-1.js": {
+      "bytes": 36,
+      "sha256": "551afd726662055708c215e6bfa41dc9c59f140f96062e1f2b07326b8aad5bb7"
+    },
+    "bo1z/play.coop-20261011-1.js": {
+      "bytes": 45432,
+      "sha256": "a67cdfbcd228b54827f1a6fe8b9d791ef955d26d202742c9bb2cb4e906bbc81b"
+    },
+    "bo1z/play.js": {
+      "bytes": 36,
+      "sha256": "551afd726662055708c215e6bfa41dc9c59f140f96062e1f2b07326b8aad5bb7"
+    },
+    "bo1z/play.mobile-start-20261011-1.js": {
+      "bytes": 36,
+      "sha256": "551afd726662055708c215e6bfa41dc9c59f140f96062e1f2b07326b8aad5bb7"
+    },
+    "bo1z/play.no-intro-20261011-1.js": {
+      "bytes": 36,
+      "sha256": "551afd726662055708c215e6bfa41dc9c59f140f96062e1f2b07326b8aad5bb7"
+    },
+    "bo1z/play.perf-20261011-2.js": {
+      "bytes": 36,
+      "sha256": "551afd726662055708c215e6bfa41dc9c59f140f96062e1f2b07326b8aad5bb7"
+    },
+    "bo1z/renderer-policy.begin-scene-20261011-1.mjs": {
+      "bytes": 2500,
+      "sha256": "7ab7a238e439a0c4e9076734e92c6529484d4f3daedd25ddac4e045cc229115a"
+    }
+  }
+}
