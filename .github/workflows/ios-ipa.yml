@@ -1,0 +1,42 @@
+name: BO1 Mobile IPA (experimental WebKit client)
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/ios-ipa]
+    paths: ['ios/**', '.github/workflows/ios-ipa.yml']
+permissions:
+  contents: read
+concurrency:
+  group: bo1-ios-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Test bounded diagnostics bridge
+        run: node --test ios/tests/diagnostics.test.cjs
+      - name: Compile and verify ARM64 IPA
+        run: bash ios/scripts/build.sh iphoneos
+      - name: Upload IPA for personal re-signing
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: BO1-Mobile-IPA
+          path: ios/build/iphoneos/BO1-Mobile.ipa
+          if-no-files-found: error
+          retention-days: 14
+      - name: Compile native launcher for simulator
+        run: bash ios/scripts/build.sh iphonesimulator
+      - name: Launch native interface in simulator
+        run: bash ios/scripts/simulator-smoke.sh
+      - name: Upload native launcher screenshot
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: BO1-launcher-simulator
+          path: ios/build/launcher-simulator.png
+          if-no-files-found: ignore
+          retention-days: 14
