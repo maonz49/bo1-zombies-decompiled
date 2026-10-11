@@ -31,3 +31,9 @@ test('flushes errors immediately and avoids duplicate injection',()=>{
   const h=run();h.events.error({message:'failure'});assert.match(h.messages[1].lines[0],/failure/);
   vm.runInNewContext(source,h.context);assert.equal(h.intervals.length,1);
 });
+test('reports small engine counters without walking or serializing the heap',()=>{
+  const h=run();
+  h.context.five={load:{stage:'world'},engine:{telemetryMemory:()=>({wasmBytes:2147418112,enginePMemUsed:1234,extra:new Uint8Array(1000),audioCachedPCMBytes:NaN}),memorySnapshot:()=>{throw new Error('must not walk heap');}}};
+  h.intervals[0]();const m=h.messages.find(m=>m.type==='memory');
+  assert.equal(m.stage,'world');assert.equal(m.enginePMemUsed,1234);assert.equal(m.extra,undefined);assert.equal(m.audioCachedPCMBytes,undefined);
+});

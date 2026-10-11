@@ -18,6 +18,7 @@ xcrun --sdk "$sdk" clang \
   "$project_dir/BO1Mobile/main.m" -o "$app_dir/BO1Mobile"
 cp "$project_dir/BO1Mobile/Info.plist" "$app_dir/Info.plist"
 cp "$project_dir/BO1Mobile/Diagnostics.js" "$app_dir/Diagnostics.js"
+cp "$project_dir/BO1Mobile/MemoryPatch.js" "$app_dir/MemoryPatch.js"
 /usr/libexec/PlistBuddy -c 'Delete :CFBundleSupportedPlatforms' "$app_dir/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c 'Add :CFBundleSupportedPlatforms array' "$app_dir/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :CFBundleSupportedPlatforms:0 string $platform" "$app_dir/Info.plist"

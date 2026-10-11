@@ -19,6 +19,10 @@ jobs:
           persist-credentials: false
       - name: Test bounded diagnostics bridge
         run: node --test ios/tests/diagnostics.test.cjs
+      - name: Reproduce and test the pinned engine memory patch
+        run: |
+          python3 ios/scripts/build_memory_patch.py
+          node --test ios/tests/memory.test.cjs
       - name: Compile and verify ARM64 IPA
         run: bash ios/scripts/build.sh iphoneos
       - name: Upload IPA for personal re-signing

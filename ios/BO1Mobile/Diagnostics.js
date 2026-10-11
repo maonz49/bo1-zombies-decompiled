@@ -25,7 +25,20 @@
     send({type: 'logs', lines: pending.splice(0), dropped});
     dropped = 0;
   };
-  setInterval(flush, 1000);
+  const memoryFields = ['wasmBytes', 'wasmBreak', 'wasmUnclaimedBytes', 'engineZBytes',
+    'engineHunkUsed', 'enginePMemUsed', 'textureStagingBytes', 'bufferStagingBytes',
+    'virtualReservedBytes', 'audioCachedPCMBytes', 'audioCachedClips', 'audioPCMEvictions'];
+  const sampleMemory = () => {
+    try {
+      const state = window.five;
+      const memory = state?.engine?.telemetryMemory?.();
+      if (!memory) return;
+      const sample = {type: 'memory', stage: String(state.load?.stage || 'unknown').slice(0, 40)};
+      for (const key of memoryFields) if (typeof memory[key] === 'number' && Number.isFinite(memory[key])) sample[key] = memory[key];
+      send(sample); // Counter reads only: no mallinfo(), heap walk, or heap serialization.
+    } catch (_) {}
+  };
+  setInterval(() => { sampleMemory(); flush(); }, 1000);
   addEventListener('pagehide', flush);
   addEventListener('error', e => { record('error', [e.message || 'Resource error']); flush(); });
   addEventListener('unhandledrejection', e => { record('rejection', [e.reason]); flush(); });

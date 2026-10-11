@@ -16,6 +16,7 @@ def verify(path):
         assert info['CFBundleIdentifier'] == 'eu.znoam.bo1.mobile'
         assert info['CFBundleSupportedPlatforms'] == ['iPhoneOS']
         assert info['WKAppBoundDomains'] == ['bo1.znoam.eu']
+        assert info['CFBundleShortVersionString'] == '0.2.0'
         binary_path = 'Payload/BO1Mobile.app/'+info['CFBundleExecutable']
         binary = archive.read(binary_path)
         magic, cpu, subtype, kind, ncmds, sizeofcmds, flags, reserved = struct.unpack_from('<8I', binary)
@@ -32,6 +33,9 @@ def verify(path):
             offset += size
         assert signed, 'Expected ad-hoc signature to be replaced by the sideloading tool'
         assert b'capabilities' in archive.read('Payload/BO1Mobile.app/Diagnostics.js')
+        patch = archive.read('Payload/BO1Mobile.app/MemoryPatch.js')
+        assert b'36024c2655e29a3eb97b64c20e3b9270cd610943c70c18ed470bcd8789a6ff01' in patch
+        assert b'__BO1_RECIPE__' not in patch
         assert 'Payload/BO1Mobile.app/Icon60@3x.png' in names
         assert not any(n.endswith('.mobileprovision') for n in names), 'No personal provisioning profile belongs in this artifact'
     print('Verified ARM64 application bundle; ad-hoc signature, requires personal re-signing.')

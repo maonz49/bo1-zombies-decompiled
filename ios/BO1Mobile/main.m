@@ -9,6 +9,9 @@ static NSString *const ReportKey = @"BO1LastLaunchReport";
 @property(nonatomic, strong) WKWebView *webView;
 @property(nonatomic, strong) UIButton *menuButton;
 @property(nonatomic, strong) NSMutableArray<NSString *> *lines;
+@property(nonatomic, strong) NSMutableArray<NSString *> *memorySamples;
+@property(nonatomic, copy) NSString *patchStatus;
+@property(nonatomic, copy) NSString *capabilities;
 @property(nonatomic, strong) UIStackView *panel;
 - (void)appendLog:(NSString *)line;
 - (void)saveReport;
@@ -20,7 +23,8 @@ static NSString *const ReportKey = @"BO1LastLaunchReport";
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor colorWithWhite:0.045 alpha:1];
     self.lines = [NSMutableArray array];
-    [self showHome:@"Kino der Toten • Profil éco"];
+    self.memorySamples = [NSMutableArray array];
+    [self showHome:@"Kino der Toten • Profil mémoire 0.2"];
 }
 - (BOOL)prefersStatusBarHidden { return YES; }
 - (BOOL)prefersHomeIndicatorAutoHidden { return self.webView != nil; }
@@ -71,18 +75,24 @@ static NSString *const ReportKey = @"BO1LastLaunchReport";
     while (self.lines.count > 100) [self.lines removeObjectAtIndex:0];
 }
 - (void)saveReport {
-    NSString *report = [NSString stringWithFormat:@"BO1 Mobile 0.1 — application WebKit expérimentale\niOS %@\n%@\n\n%@", UIDevice.currentDevice.systemVersion, BO1URL, [self.lines componentsJoinedByString:@"\n"]];
+    NSString *report = [NSString stringWithFormat:@"BO1 Mobile 0.2 — application WebKit expérimentale\niOS %@\n%@\nCorrectif : %@\nCapacités : %@\n\nMémoire du moteur (compteurs internes, pas la mémoire résidente iOS) :\n%@\n\nConsole :\n%@", UIDevice.currentDevice.systemVersion, BO1URL, self.patchStatus ?: @"non chargé", self.capabilities ?: @"non reçues", [self.memorySamples componentsJoinedByString:@"\n"], [self.lines componentsJoinedByString:@"\n"]];
     [NSUserDefaults.standardUserDefaults setObject:report forKey:ReportKey];
 }
 - (void)startGame {
     if (self.webView) return;
     [self.lines removeAllObjects];
+    [self.memorySamples removeAllObjects];
+    self.patchStatus = nil;
+    self.capabilities = nil;
     [self appendLog:@"Démarrage demandé — qualité éco, WebGL2, interface tactile."];
     [self saveReport];
     NSString *scriptPath = [NSBundle.mainBundle pathForResource:@"Diagnostics" ofType:@"js"];
     NSError *scriptError = nil;
     NSString *script = [NSString stringWithContentsOfFile:scriptPath encoding:NSUTF8StringEncoding error:&scriptError];
     if (!script) { [self stopWithReason:@"Le module de diagnostic manque dans cette application."]; return; }
+    NSString *patchPath = [NSBundle.mainBundle pathForResource:@"MemoryPatch" ofType:@"js"];
+    NSString *patch = [NSString stringWithContentsOfFile:patchPath encoding:NSUTF8StringEncoding error:&scriptError];
+    if (!patch) { [self stopWithReason:@"Le correctif mémoire manque dans cette application."]; return; }
     [self.panel removeFromSuperview];
     self.panel = nil;
     WKWebViewConfiguration *config = [WKWebViewConfiguration new];
@@ -90,9 +100,10 @@ static NSString *const ReportKey = @"BO1LastLaunchReport";
     config.allowsInlineMediaPlayback = YES;
     config.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
     config.limitsNavigationsToAppBoundDomains = YES;
-    config.applicationNameForUserAgent = @"BO1Mobile/0.1";
+    config.applicationNameForUserAgent = @"BO1Mobile/0.2";
     [config.userContentController addScriptMessageHandler:self name:@"bo1"];
     [config.userContentController addUserScript:[[WKUserScript alloc] initWithSource:script injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES]];
+    [config.userContentController addUserScript:[[WKUserScript alloc] initWithSource:patch injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:YES]];
     self.webView = [[WKWebView alloc] initWithFrame:self.view.bounds configuration:config];
     self.webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.webView.navigationDelegate = self;
@@ -184,11 +195,27 @@ static NSString *const ReportKey = @"BO1LastLaunchReport";
         for (id line in [lines subarrayWithRange:NSMakeRange(0, MIN(lines.count, 40))]) if ([line isKindOfClass:NSString.class]) [self appendLog:line];
         [self saveReport];
     } else if ([body[@"type"] isEqual:@"capabilities"]) {
+        self.capabilities = [body.description substringToIndex:MIN(body.description.length, 1600)];
         [self appendLog:[NSString stringWithFormat:@"Capacités : %@", body]];
         [self saveReport];
         BOOL (^yes)(id) = ^BOOL(id value) { return [value isKindOfClass:NSNumber.class] && [value boolValue]; };
         if (!yes(body[@"jspi"])) [self stopWithReason:@"Cette version d’iOS ne fournit pas JSPI au moteur. iOS 27 ou une version compatible est nécessaire."];
         else if (!yes(body[@"isolated"]) || !yes(body[@"sharedMemory"])) [self stopWithReason:@"La mémoire partagée nécessaire au jeu n’est pas disponible dans cette vue web."];
+    } else if ([body[@"type"] isEqual:@"memory"] || [body[@"type"] isEqual:@"memoryPatch"]) {
+        NSData *json = [NSJSONSerialization dataWithJSONObject:body options:NSJSONWritingSortedKeys error:nil];
+        NSString *text = json ? [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding] : @"invalide";
+        if (text.length > 1800) text = [text substringToIndex:1800];
+        if ([body[@"type"] isEqual:@"memoryPatch"]) {
+            self.patchStatus = text;
+            if ([body[@"state"] isEqual:@"failed"]) {
+                [self stopWithReason:@"Le moteur téléchargé ne correspond pas au correctif mémoire de cette application."];
+                return;
+            }
+        } else {
+            [self.memorySamples addObject:[NSString stringWithFormat:@"%@: %@", NSDate.date.description, text]];
+            while (self.memorySamples.count > 24) [self.memorySamples removeObjectAtIndex:0];
+        }
+        [self saveReport];
     }
 }
 - (void)didReceiveMemoryWarning {

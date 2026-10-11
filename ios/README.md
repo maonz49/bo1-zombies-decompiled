@@ -2,7 +2,7 @@
 
 Cette application iOS ouvre la version WebAssembly de BO1 hébergée sur `bo1.znoam.eu` dans WKWebView. **Ce n'est pas un portage natif ARM64 du moteur BO1 et ce n'est pas un correctif prouvé du crash Safari.** WKWebView emploie aussi WebKit et ses limites de mémoire restent applicables. Le moteur Windows/DirectX à la racine n'est pas compilé dans cette application.
 
-Le lancement utilise `kino-mobile-20261011.html`, `quality=eco`, `touch=1`, `renderer=webgl2`, `telemetry=0` et `packOrigin=0`. Cette page doit rester hébergée avec COOP/COEP. La version publiée le 11 octobre 2026 supprime l'intro sur mobile et séquence les téléchargements avant le moteur. Les correctifs web et les données du jeu ne sont pas embarqués dans l'IPA. **Internet est requis** et le premier lancement télécharge les données dans le stockage WebKit propre à l'application.
+Le lancement utilise `kino-mobile-20261011.html`, `quality=eco`, `touch=1`, `renderer=webgl2`, `telemetry=0` et `packOrigin=0`. Cette page doit rester hébergée avec COOP/COEP. La version publiée le 11 octobre 2026 supprime l'intro sur mobile et séquence les téléchargements avant le moteur. **La version 0.2 embarque le correctif mémoire décrit dans [memory/README.md](memory/README.md)** et l'applique au moteur téléchargé après vérification SHA-256. Les données du jeu restent sur le serveur. **Internet est requis** et le premier lancement télécharge les données dans le stockage WebKit propre à l'application.
 
 L'interface native conserve les dernières lignes du journal et les capacités web disponibles. Si le processus WebKit s'arrête, elle propose un nouveau lancement manuel et le partage du diagnostic, sans rechargement automatique en boucle. Un arrêt du processus ne prouve pas à lui seul un manque de mémoire. Si iOS tue aussi l'application entière, le dernier rapport sauvegardé reste accessible au lancement suivant, mais les dernières lignes en attente peuvent être perdues. Aucun rapport n'est envoyé automatiquement.
 
@@ -11,7 +11,8 @@ L'interface native conserve les dernières lignes du journal et les capacités w
 Sur un Mac avec Xcode et son SDK iPhoneOS :
 
 ```sh
-node --test ios/tests/diagnostics.test.cjs
+python3 ios/scripts/build_memory_patch.py
+node --test ios/tests/diagnostics.test.cjs ios/tests/memory.test.cjs
 bash ios/scripts/build.sh iphoneos
 ```
 
