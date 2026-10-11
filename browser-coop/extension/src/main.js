@@ -15,7 +15,8 @@ import { EngineMemory } from "./engine-mem.js";
 import { ringOffsets } from "./rings.js";
 import { createRoomCode, normalizeRoomCode } from "../../shared/protocol.js";
 import { Panel } from "./ui.js";
-import { GamepadControl, AIM_SPEEDS } from "./gamepad.js";
+import { GamepadControl, AIM_SPEEDS, DEFAULT_AIM_LEVEL, normalizeAimLevel } from "./gamepad.js";
+import { mountControllerSettings } from './controller-settings.js';
 
 /* global __PUMP_SOURCE__, __VERSION__ */
 const VERSION = __VERSION__;
@@ -57,7 +58,7 @@ function start() {
     // Touch-only solo must keep its existing loader while iPhone startup is unresolved.
     // An explicit controller choice is retained; desktop still enables it by default.
     controller: readSetting("bo1z-coop-controller", matchMedia("(pointer: coarse)").matches ? "0" : "1") !== "0",
-    aimLevel: Math.max(0, Math.min(AIM_SPEEDS.length - 1, Number(readSetting("bo1z-coop-aim", "4")) || 0)),
+    aimLevel: normalizeAimLevel(readSetting("bo1z-coop-aim", String(DEFAULT_AIM_LEVEL))),
     socket: "idle",
     peer: false,
     peerInfo: null,
@@ -123,6 +124,7 @@ function start() {
   });
   coop.panel = panel;
   panel.mount();
+  coop.controllerSettings = mountControllerSettings({ level: coop.aimLevel, onChange: level => setAim(coop, level) });
 
   if (coop.controller) {
     coop.gamepad = new GamepadControl({
@@ -716,8 +718,9 @@ function relayBlocks(coop) {
 }
 
 function setAim(coop, level) {
-  coop.aimLevel = Math.max(0, Math.min(AIM_SPEEDS.length - 1, level));
+  coop.aimLevel = normalizeAimLevel(level);
   if (coop.gamepad) coop.gamepad.aimLevel = coop.aimLevel;
+  coop.controllerSettings?.sync(coop.aimLevel);
   saveSetting("bo1z-coop-aim", String(coop.aimLevel));
 }
 

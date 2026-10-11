@@ -31,6 +31,21 @@ la manette et appuyer sur un de ses boutons. Sur téléphone, choisir **Activer 
 puis recharger la page avant de lancer le jeu. Le choix est mémorisé. Appuyer d’abord sur **Jouer** à l’écran pour
 activer le son. Carré/X recharge ; maintenir le bouton permet d’interagir, acheter ou réanimer.
 
+### Sensibilité de la manette
+
+Le menu **Options → Sensibilité de la manette** propose dix niveaux. La vitesse du stick
+droit augmente de 50 % à chaque niveau par rapport à la première intégration, tout en
+conservant la zone morte et le ralentissement pendant la visée. Le niveau par défaut est
+5/10. Un niveau déjà choisi est conservé ; son changement s’applique immédiatement et
+reste enregistré pour les prochaines visites et les autres cartes. Les boutons **Visée −/+**
+du panneau utilisent le même réglage. La valeur du curseur souris/tactile n’est pas modifiée.
+
+Pour mettre à jour une installation existante, remplacer seulement
+`bo1z/coop.validated-20261011-1.js`, puis actualiser la page avec **Ctrl+F5** sur PC.
+Le module conserve son nom d’entrée pour fonctionner avec les pages déjà installées ;
+sa version interne est `znoam-20261011-2`. Le fichier `coop-config.js` et le relais
+Cloudflare déjà configurés ne sont pas à remplacer ni à redéployer.
+
 ## Activer la coopération en ligne
 
 Le relais de l’auteur accepte son domaine uniquement. Cette adaptation fournit un relais

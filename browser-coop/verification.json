@@ -1,11 +1,11 @@
 {
-  "version": "znoam-20261011-1",
+  "version": "znoam-20261011-2",
   "date": "2026-10-11",
   "upstream": "https://github.com/invictus841/bo1-zombies-decompiled/tree/861e39bc083b4b986f68ad700c2e93f588736641/browser-coop",
   "engine_sha256": "61192df377020627f52fa7e9fd28047bd53662aa46e5e3cd6e7fad0c5c35cc98",
   "tests": {
     "node": {
-      "pass": 70,
+      "pass": 72,
       "fail": 0,
       "skipped": 0
     },
@@ -20,7 +20,13 @@
       "fail": 0,
       "skipped": 0
     },
-    "memory_compatibility": "Les trois fonctions d’allocation de l’IPA 0.2, les sections de données et l’interface WASM sont préservées après le correctif coopération. Les deux empreintes connues sont acceptées dans le même salon."
+    "memory_compatibility": "Les trois fonctions d’allocation de l’IPA 0.2, les sections de données et l’interface WASM sont préservées après le correctif coopération. Les deux empreintes connues sont acceptées dans le même salon.",
+    "controller_settings": [
+      "Vitesse mesurée : +50 %, ralentissement de visée conservé, niveaux 1 à 10 bornés",
+      "Curseur Options : clavier et tactile, mise à jour immédiate, sauvegarde après rechargement",
+      "Synchronisation avec Visée −/+, valeur de sensibilité souris inchangée",
+      "Contrôle de 44 px minimum, accessible sur écran 375px et en paysage"
+    ]
   },
   "not_validated": [
     "Partie complète après adaptation",
@@ -44,8 +50,8 @@
       "sha256": "58b32347ba0240eef9afa7401564d49bb1e453c996f05b8b61525fbe9cfbb552"
     },
     "bo1z/coop.validated-20261011-1.js": {
-      "bytes": 86920,
-      "sha256": "252938a24a211259affe379edc83856b1ee28886d99f354bbea15d43b622fd2c"
+      "bytes": 89316,
+      "sha256": "9a7039225c1200ff855198c1dc1746546c8096ad5854d43fb24eed16a749d101"
     },
     "bo1z/download-worker.mobile-start-20261011-1.js": {
       "bytes": 32130,
@@ -110,5 +116,14 @@
   },
   "ios_memory_patch_commit": "b295713a76c076a3a51c26c5db694068f1733982",
   "compatible_ios_engine_sha256": "36024c2655e29a3eb97b64c20e3b9270cd610943c70c18ed470bcd8789a6ff01",
-  "iphone_status": "2026-10-11 : l’utilisateur confirme que la version IPA n’a pas résolu le problème sur iPhone."
+  "iphone_status": "2026-10-11 : l’utilisateur confirme que la version IPA n’a pas résolu le problème sur iPhone.",
+  "update": {
+    "replace": [
+      "bo1z/coop.validated-20261011-1.js"
+    ],
+    "keep": [
+      "bo1z/coop-config.js"
+    ],
+    "relay_redeploy": false
+  }
 }
