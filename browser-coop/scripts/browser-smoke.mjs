@@ -50,6 +50,14 @@ try {
 
   const mobile = await open(base, { width: 375, height: 812, isMobile: true, hasTouch: true });
   assert.equal(await mobile.evaluate(() => document.querySelector('bo1z-coop').classList.contains('collapsed')), true);
+  const soloMobile = await mobile.evaluate(async () => {
+    const { prepareEngine } = await import('/bo1z/coop.validated-20261011-1.js');
+    // This nonexistent URL must never be fetched for touch-only solo.
+    const options = await prepareEngine('/must-not-fetch-for-touch-solo.wasm');
+    return { controller: window.__bo1zCoop.controller, patched: window.__bo1zCoop.patched,
+      gamepad: !!window.__bo1zCoop.gamepad, options: Object.keys(options) };
+  });
+  assert.deepEqual(soloMobile, { controller: false, patched: false, gamepad: false, options: [] });
   await mobile.locator('bo1z-coop >>> button[data-act="collapse"]').click();
   for (const viewport of [{ width: 375, height: 812, isMobile: true, hasTouch: true }, { width: 812, height: 375, isMobile: true, hasTouch: true }]) {
     await mobile.setViewport(viewport);
@@ -60,7 +68,12 @@ try {
     assert.ok(dimensions.x >= 0 && dimensions.right <= dimensions.width && dimensions.bottom <= dimensions.height, JSON.stringify(dimensions));
   }
   if (process.env.QA_SCREENSHOT) await mobile.screenshot({ path: process.env.QA_SCREENSHOT });
-  console.log('PASS phone panel at 375px and landscape');
+  console.log('PASS phone panel at 375px and landscape; touch-only solo skips added WASM preparation');
+  await mobile.locator('bo1z-coop >>> button[data-act="controller"]').click();
+  await mobile.reload();
+  await mobile.waitForFunction(() => window.__bo1zCoop?.controller && !!window.__bo1zCoop.gamepad);
+  await mobile.evaluate(() => localStorage.removeItem('bo1z-coop-controller'));
+  console.log('PASS phone controller is available by explicit opt-in and persists across reload');
 
   if (process.env.BO1Z_ENGINE_WASM) {
     const native = await page.evaluate(async () => {

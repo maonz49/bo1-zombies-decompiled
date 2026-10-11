@@ -51,6 +51,18 @@ export const BUILDS = {
   },
 };
 
+// BO1 Mobile 0.2, memory recipe bo1-memory-20261011-1 (ios/memory/recipe.json).
+// Changes only function bodies 1949, 5757 and 1231. Function indices, data segments,
+// shared memory addresses and the co-op target functions remain identical.
+BUILDS['36024c2655e29a3eb97b64c20e3b9270cd610943c70c18ed470bcd8789a6ff01'] =
+  BUILDS['61192df377020627f52fa7e9fd28047bd53662aa46e5e3cd6e7fad0c5c35cc98'];
+
+// The iOS allocation strategy does not change the network ABI. Keep the actual
+// binary hash for validation, while allowing these two explicitly verified builds to play together.
+export function compatibleEngines(left, right) {
+  return Object.hasOwn(BUILDS, left) && Object.hasOwn(BUILDS, right) && BUILDS[left] === BUILDS[right];
+}
+
 // connstate_t of the local client (client.connectionState).
 export const CONNECTION = Object.freeze({ disconnected: 0, connecting: 4, challenging: 5, connected: 6, sendingStats: 7, loading: 8, primed: 9, active: 10 });
 // clientState_t of a server slot.

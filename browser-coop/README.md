@@ -27,7 +27,8 @@ cette intégration après le transfert. Aucune recompilation de l’IPA n’est 
 
 Choisir une carte, puis ouvrir **Manette · Coopération** en haut de l’écran. Sur téléphone,
 le panneau est réduit au départ et devient discret pendant la partie. Brancher/connecter
-la manette et appuyer sur un de ses boutons. Appuyer d’abord sur **Jouer** à l’écran pour
+la manette et appuyer sur un de ses boutons. Sur téléphone, choisir **Activer la manette**,
+puis recharger la page avant de lancer le jeu. Le choix est mémorisé. Appuyer d’abord sur **Jouer** à l’écran pour
 activer le son. Carré/X recharge ; maintenir le bouton permet d’interagir, acheter ou réanimer.
 
 ## Activer la coopération en ligne
@@ -66,6 +67,10 @@ qualité, tactile et télémétrie. Une limite d’images/s existante n’est pa
 
 Le moteur WASM et sa mémoire partagée d’origine ne sont pas recompilés. Cette intégration
 n’est pas une correction démontrée des arrêts de Safari autour de 75–100 % du chargement.
+Le 11 octobre 2026, l’utilisateur confirme que la version IPA n’a pas résolu le problème iPhone.
+En solo tactile, la manette est donc désactivée par défaut : aucun téléchargement, correctif
+ni compilation WASM supplémentaire n’est déclenché par cette intégration. L’activation
+explicite d’une manette ou l’entrée dans un salon active la préparation nécessaire.
 
 ## Vérifications
 
@@ -73,7 +78,7 @@ n’est pas une correction démontrée des arrêts de Safari autour de 75–100 
 npm ci
 npm run check
 # En pointant vers le moteur déjà servi par votre site :
-BO1Z_ENGINE_WASM=/chemin/KisakBlack-web.wasm npm test
+BO1Z_ENGINE_WASM=/chemin/KisakBlack-web.wasm BO1Z_MEMORY_ENGINE_WASM=/chemin/ios/build/memory/patched.wasm npm test
 # Chrome/Chromium installé localement :
 CHROME_PATH=/chemin/chrome BO1Z_ENGINE_WASM=/chemin/KisakBlack-web.wasm npm run test:browser
 ```
@@ -87,6 +92,16 @@ Le moteur accepté est identifié par SHA-256 :
 `61192df377020627f52fa7e9fd28047bd53662aa46e5e3cd6e7fad0c5c35cc98`.
 Une autre version n’est pas modifiée : les nouvelles fonctions sont désactivées, le solo
 reste utilisable. Le chargement d’une session coopérative incompatible échoue explicitement.
+
+La version du moteur issue du correctif mémoire de l’IPA 0.2 est également reconnue :
+`36024c2655e29a3eb97b64c20e3b9270cd610943c70c18ed470bcd8789a6ff01`.
+Un test vérifie que les trois fonctions d’allocation modifiées par l’IPA, les données et
+l’interface WASM sont conservées après l’ajout de la coopération. Pour reproduire cette
+vérification depuis le dépôt complet, générer d’abord la fixture avec
+`python3 ios/scripts/build_memory_patch.py --engine /chemin/KisakBlack-web.wasm`.
+Le test de compatibilité est ignoré si `BO1Z_MEMORY_ENGINE_WASM` n’est pas fourni.
+Le contrôle de version du salon accepte également le couple navigateur classique / IPA 0.2 :
+ces deux empreintes précises partagent le même protocole réseau, malgré leur stratégie mémoire différente.
 
 ## Développement et retour arrière
 

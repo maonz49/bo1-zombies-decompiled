@@ -6,7 +6,7 @@
 // The relay (relay/src/index.js, a Cloudflare Durable Object) carries the engine's own packets between the two pages.
 // Solo is left unmodified when controller support is disabled; otherwise its command mailbox is installed too.
 
-import { CLIENT_STATE, CONNECTION } from "./layout.js";
+import { CLIENT_STATE, CONNECTION, compatibleEngines } from "./layout.js";
 import { engineOptions } from "./native-engine.js";
 export { finishEngine } from './native-engine.js';
 import { normalizeRelay, isLoopback, sessionUrl } from "./navigation.js";
@@ -54,9 +54,9 @@ function start() {
     inviteRelay: normalizeRelay(params.get("relay") ?? ""),
     editRelay: false,
     uncapped: params.get("coopUncapped") !== "0" && !matchMedia("(pointer: coarse)").matches,
-    // Controller support needs the patched engine (its command mailbox), so with it on the engine is patched in
-    // solo games too. Off: solo games run exactly as on vel.gg.
-    controller: readSetting("bo1z-coop-controller", "1") !== "0",
+    // Touch-only solo must keep its existing loader while iPhone startup is unresolved.
+    // An explicit controller choice is retained; desktop still enables it by default.
+    controller: readSetting("bo1z-coop-controller", matchMedia("(pointer: coarse)").matches ? "0" : "1") !== "0",
     aimLevel: Math.max(0, Math.min(AIM_SPEEDS.length - 1, Number(readSetting("bo1z-coop-aim", "4")) || 0)),
     socket: "idle",
     peer: false,
@@ -322,7 +322,7 @@ function setupHost(coop, Module, args) {
 async function setupGuest(coop, Module, args) {
   const info = await until(() => (coop.peerInfo?.zone ? coop.peerInfo : null), 30000);
   if (!info) throw new Error("L’hôte ne répond pas. Vérifiez que sa partie est ouverte, puis rechargez.");
-  if (info.hash && info.hash !== coop.hash) throw new Error("Les deux joueurs ont des versions différentes du jeu. Rechargez les deux pages.");
+  if (info.hash && !compatibleEngines(info.hash, coop.hash)) throw new Error("Les deux joueurs ont des versions incompatibles du jeu. Rechargez les deux pages.");
   const zone = devmapZone(args);
   if (zone !== info.zone) throw new Error(`L’hôte joue sur ${MAP_NAMES[info.slug] ?? info.zone}. Rechargez cette page.`);
   if (Array.isArray(info.gameArgs)) applyGameDvars(args, info.gameArgs);

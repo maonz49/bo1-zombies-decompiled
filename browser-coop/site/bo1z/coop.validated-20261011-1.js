@@ -58,6 +58,10 @@ var BUILDS = {
     // NA_LOOPBACK
   }
 };
+BUILDS["36024c2655e29a3eb97b64c20e3b9270cd610943c70c18ed470bcd8789a6ff01"] = BUILDS["61192df377020627f52fa7e9fd28047bd53662aa46e5e3cd6e7fad0c5c35cc98"];
+function compatibleEngines(left, right) {
+  return Object.hasOwn(BUILDS, left) && Object.hasOwn(BUILDS, right) && BUILDS[left] === BUILDS[right];
+}
 var CONNECTION = Object.freeze({ disconnected: 0, connecting: 4, challenging: 5, connected: 6, sendingStats: 7, loading: 8, primed: 9, active: 10 });
 var CLIENT_STATE = Object.freeze({ free: 0, zombie: 1, reconnecting: 2, connected: 3, loading: 4, active: 5 });
 
@@ -1056,9 +1060,9 @@ function start() {
     inviteRelay: normalizeRelay(params.get("relay") ?? ""),
     editRelay: false,
     uncapped: params.get("coopUncapped") !== "0" && !matchMedia("(pointer: coarse)").matches,
-    // Controller support needs the patched engine (its command mailbox), so with it on the engine is patched in
-    // solo games too. Off: solo games run exactly as on vel.gg.
-    controller: readSetting("bo1z-coop-controller", "1") !== "0",
+    // Touch-only solo must keep its existing loader while iPhone startup is unresolved.
+    // An explicit controller choice is retained; desktop still enables it by default.
+    controller: readSetting("bo1z-coop-controller", matchMedia("(pointer: coarse)").matches ? "0" : "1") !== "0",
     aimLevel: Math.max(0, Math.min(AIM_SPEEDS.length - 1, Number(readSetting("bo1z-coop-aim", "4")) || 0)),
     socket: "idle",
     peer: false,
@@ -1343,7 +1347,7 @@ function setupHost(coop, Module, args) {
 async function setupGuest(coop, Module, args) {
   const info = await until(() => coop.peerInfo?.zone ? coop.peerInfo : null, 3e4);
   if (!info) throw new Error("L\u2019h\xF4te ne r\xE9pond pas. V\xE9rifiez que sa partie est ouverte, puis rechargez.");
-  if (info.hash && info.hash !== coop.hash) throw new Error("Les deux joueurs ont des versions diff\xE9rentes du jeu. Rechargez les deux pages.");
+  if (info.hash && !compatibleEngines(info.hash, coop.hash)) throw new Error("Les deux joueurs ont des versions incompatibles du jeu. Rechargez les deux pages.");
   const zone = devmapZone(args);
   if (zone !== info.zone) throw new Error(`L\u2019h\xF4te joue sur ${MAP_NAMES[info.slug] ?? info.zone}. Rechargez cette page.`);
   if (Array.isArray(info.gameArgs)) applyGameDvars(args, info.gameArgs);
